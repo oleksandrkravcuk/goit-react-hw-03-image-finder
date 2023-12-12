@@ -1,7 +1,7 @@
 import React from 'react';
 import { TailSpin } from 'react-loader-spinner';
 import 'react-loader-spinner';
-import styles from '../styles.css';
+import styles from '../styles.module.css';
 
 const Loader = () => {
     return (

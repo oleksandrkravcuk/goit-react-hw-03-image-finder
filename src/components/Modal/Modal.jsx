@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import styles from '../styles.css';
+import styles from '../styles.module.css';
 
 const Modal = ({ isOpen, image, onClose }) => {
     const handleImageClick = (e) => {

@@ -5,7 +5,7 @@ import Button from './Button/Button';
 import Loader from './Loader/Loader';
 import Modal from './Modal/Modal';
 import { searchImages } from './Api';
-import styles from './styles.css';
+import styles from './styles.module.css';
 
 export const App = () => {
   const [name, setName] = useState('');
