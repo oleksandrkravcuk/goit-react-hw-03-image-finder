@@ -1,71 +1,84 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { Component } from 'react';
 import Searchbar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
 import Loader from './Loader/Loader';
 import Modal from './Modal/Modal';
-import { searchImages } from './Api';
+import { searchImages } from './Api'; 
 import styles from './styles.module.css';
 
-export const App = () => {
-  const [name, setName] = useState('');
-  const [images, setImages] = useState([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [modalImage, setModalImage] = useState('');
-  const [showModal, setShowModal] = useState(false);
+export class App extends Component {
+  constructor() {
+    super();
+    this.state = {
+      name: '',
+      images: [],
+      page: 1,
+      totalImages: 0,
+      loading: false,
+      modalImage: '',
+      showModal: false,
+    };
+  }
 
-  const fetchData = useCallback(() => {
+  handleSearchSubmit = (name) => {
+    if (this.state.name !== name) {
+      this.setState({ name, page: 1, images: [], totalImages: 0 }, this.fetchData);
+    }
+  };
+
+  handleLoadMore = () => {
+    this.setState((prevState) => ({ page: prevState.page + 1 }), this.fetchData);
+  };
+
+  handleImageClick = (imageUrl) => {
+    this.setState({ modalImage: imageUrl, showModal: true });
+  };
+
+  handleCloseModal = () => {
+    this.setState({ showModal: false, modalImage: '' });
+  };
+
+  componentDidUpdate(prevProps, prevState) {
+    const { name, page } = this.state;
+    if (prevState.name !== name || prevState.page !== page) {
+      this.fetchData();
+    }
+  }
+
+  fetchData = () => {
+    const { name, page } = this.state;
+
     if (!name) return;
 
-    setLoading(true);
+    this.setState({ loading: true });
 
     searchImages(name, page)
-      .then(({ images: newImages, totalImages: newTotalImages }) => {
-        if (newTotalImages) {
-          setImages((prevImages) => [...prevImages, ...newImages]);
+      .then(({ images, totalImages }) => {
+        if (totalImages) {
+          this.setState((prevState) => ({
+            images: [...prevState.images, ...images],
+            totalImages,
+          }));
         } else {
           alert('Нічого не знайдено');
         }
       })
       .catch((error) => error)
-      .finally(() => setLoading(false));
-  }, [name, page]);
-
-  useEffect(() => {
-    fetchData();
-  }, [name, page, fetchData]);
-
-  const handleSearchSubmit = (newName) => {
-    if (newName !== name) {
-      setName(newName);
-      setPage(1);
-      setImages([]);
-      fetchData();
-    }
+      .finally(() => this.setState({ loading: false }));
   };
 
-  const handleLoadMore = () => {
-    setPage((prevPage) => prevPage + 1);
-  };
+  render() {
+    const { images, loading, showModal, modalImage } = this.state;
 
-  const handleImageClick = (imageUrl) => {
-    setModalImage(imageUrl);
-    setShowModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setModalImage('');
-  };
-
-  return (
-    <div className={styles.App}>
-      <Searchbar onSubmit={handleSearchSubmit} />
-      <ImageGallery images={images} onImageClick={handleImageClick} />
-      {loading && <Loader />}
-      {images.length > 0 && !loading && <Button onClick={handleLoadMore} />}
-      {showModal && <Modal isOpen={showModal} image={modalImage} onClose={handleCloseModal} />}
-    </div>
-  );
-};
+    return (
+      <div className={styles.App}>
+        <Searchbar onSubmit={this.handleSearchSubmit} />
+        <ImageGallery images={images} onImageClick={this.handleImageClick} />
+        {loading && <Loader />}
+        {images.length > 0 && !loading && <Button onClick={this.handleLoadMore} />}
+        {showModal && <Modal isOpen={showModal} image={modalImage} onClose={this.handleCloseModal} />}
+      </div>
+    );
+  }
+}
